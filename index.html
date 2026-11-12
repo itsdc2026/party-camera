@@ -228,8 +228,8 @@
 // ====== SETTINGS ======
 const API_URL = 'https://script.google.com/macros/s/AKfycbxJysyR5dUuTcbQG658smvb4shERG8LIFGFOnUznwm1gzTJfOSUNaCcSKJmcJzZhs_ioA/exec';
 const COMPANY = 'SDC Global Choice Corp.';
-const MAX_SIDE = 1280;
-const JPEG_QUALITY = 0.72;
+const MAX_SIDE = 2048;
+const JPEG_QUALITY = 0.85;
 // ======================
 
 const $ = id => document.getElementById(id);
@@ -289,7 +289,7 @@ async function startCamera() {
   if (stream) stream.getTracks().forEach(t => t.stop());
   try {
     stream = await navigator.mediaDevices.getUserMedia({
-      video: { facingMode: { ideal: facing }, width: { ideal: 1920 }, height: { ideal: 1080 } },
+      video: { facingMode: { ideal: facing }, width: { ideal: 2560 }, height: { ideal: 1440 } },
       audio: false
     });
   } catch (e) {
@@ -327,7 +327,9 @@ function capture() {
   const c = $('canvas');
   c.width = Math.round(v.videoWidth * scale);
   c.height = Math.round(v.videoHeight * scale);
-  c.getContext('2d').drawImage(v, 0, 0, c.width, c.height);
+  const ctx = c.getContext('2d');
+  ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
+  ctx.drawImage(v, 0, 0, c.width, c.height);
   const data = c.toDataURL('image/jpeg', JPEG_QUALITY);
 
   shotsLeft--;
@@ -413,7 +415,7 @@ async function loadAlbum() {
       b.style.setProperty('--r', TILT[i % TILT.length] + 'deg');
       b.setAttribute('aria-label', 'Open photo ' + (i + 1));
       const img = document.createElement('img');
-      img.loading = 'lazy'; img.alt = ''; img.src = thumb(id, 400);
+      img.loading = 'lazy'; img.alt = ''; img.src = thumb(id, 640);
       const cap = document.createElement('span'); cap.textContent = 'Christmas 2026';
       b.append(img, cap);
       b.onclick = () => openViewer(i);
@@ -443,7 +445,7 @@ function paint() {
   [vi - 1, vi, vi + 1].forEach((i, k) => {
     const im = imgs[k], id = photos[i];
     if (id) {
-      const s = thumb(id, 1200);
+      const s = thumb(id, 2000);
       if (im.getAttribute('src') !== s) im.src = s;
       im.style.visibility = 'visible';
     } else {
