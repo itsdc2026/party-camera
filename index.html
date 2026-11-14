@@ -6,202 +6,147 @@
 <title>Christmas Party Camera</title>
 <style>
   :root {
-    --leather: #1a1613;
-    --chrome-hi: #f4f5f6;
-    --chrome-mid: #b9bcc0;
-    --chrome-lo: #858a8f;
-    --cranberry: #b3202f;
-    --brass: #e2b659;
-    --pine: #12301f;
-    --pine-deep: #0a1c12;
-    --paper: #f7f5f0;
-    --muted: #a9b8ad;
-    color-scheme: dark;
+    --bg: #fafaf8;
+    --ink: #141414;
+    --sub: #7a7a75;
+    --line: #e6e6e2;
+    --accent: #c8102e;
+    color-scheme: light;
   }
   * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
   html, body { height: 100%; margin: 0; }
   body {
-    background: var(--leather);
-    color: #f1f1ee;
-    font-family: "Trebuchet MS", "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    background: var(--bg);
+    color: var(--ink);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     padding: env(safe-area-inset-top, 0px) env(safe-area-inset-right, 0px) env(safe-area-inset-bottom, 0px) env(safe-area-inset-left, 0px);
     overflow: hidden;
   }
-  button { font: inherit; cursor: pointer; border: 0; color: inherit; }
+  button { font: inherit; cursor: pointer; border: 0; color: inherit; background: none; padding: 0; }
+  svg { display: block; }
   .screen { display: none; height: 100%; flex-direction: column; }
   .screen.active { display: flex; }
-  :focus-visible { outline: 3px solid var(--brass); outline-offset: 3px; }
-
-  /* leatherette */
-  .leather {
-    background-color: var(--leather);
-    background-image: radial-gradient(rgba(255,255,255,.055) 1px, transparent 1.6px), radial-gradient(rgba(0,0,0,.35) 1px, transparent 1.6px);
-    background-size: 6px 6px, 6px 6px;
-    background-position: 0 0, 3px 3px;
-  }
-  .chrome {
-    background: linear-gradient(180deg, var(--chrome-hi) 0%, var(--chrome-mid) 45%, var(--chrome-lo) 55%, #d8dadc 100%);
-    color: #23201c;
-  }
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 3px; }
 
   /* ---------- Intro and messages ---------- */
-  #intro, #msg { align-items: center; justify-content: center; text-align: center; padding: 28px; gap: 16px; }
-  h1 { font-family: Georgia, "Times New Roman", serif; font-size: 2rem; line-height: 1.15; margin: 0; }
-  .company { color: var(--brass); margin: 0; font-size: 1rem; }
-  .rules { max-width: 320px; color: var(--muted); line-height: 1.55; margin: 0; }
-  .filmbox {
-    width: 190px; padding: 14px 10px 16px; border-radius: 8px; background: var(--cranberry);
-    border: 3px solid var(--brass); box-shadow: 0 10px 24px rgba(0,0,0,.5), inset 0 0 0 3px rgba(0,0,0,.25);
-    display: flex; flex-direction: column; align-items: center; gap: 2px; transform: rotate(-3deg);
-  }
-  .filmbox small { color: var(--brass); font-size: .85rem; }
-  .filmbox b { font-family: Georgia, serif; font-size: 4.2rem; line-height: 1; color: #fff; }
-  .filmbox span { font-size: .85rem; color: #f6d9dc; }
-  .btn { background: var(--cranberry); color: #fff; padding: 14px 34px; border-radius: 999px; font-size: 1.05rem; font-weight: 700; box-shadow: 0 4px 0 #7b1520; }
-  .btn:active { transform: translateY(2px); box-shadow: 0 2px 0 #7b1520; }
-  .btn.ghost { background: transparent; border: 2px solid var(--brass); color: var(--brass); box-shadow: none; padding: 9px 20px; font-size: .9rem; }
+  .center { align-items: center; justify-content: center; text-align: center; padding: 32px; gap: 20px; }
+  .eyebrow { margin: 0; font-size: .8rem; letter-spacing: .14em; text-transform: uppercase; color: var(--sub); }
+  h1 { margin: 0; font-size: 1.5rem; font-weight: 500; letter-spacing: -.01em; }
+  .hero { display: flex; align-items: baseline; gap: 10px; }
+  .hero b { font-size: 7.5rem; font-weight: 200; line-height: 1; letter-spacing: -.04em; }
+  .hero span { font-size: 1.1rem; color: var(--sub); }
+  .lede { margin: 0; max-width: 300px; line-height: 1.6; color: var(--sub); font-size: .95rem; }
+  .btn { background: var(--ink); color: #fff; padding: 15px 44px; border-radius: 999px; font-size: 1rem; font-weight: 500; transition: transform .1s; }
+  .btn:active { transform: scale(.97); }
 
-  /* ---------- Camera body ---------- */
-  #camera { padding: 10px 10px 12px; gap: 10px; }
-  .plate {
-    border-radius: 14px 14px 8px 8px; padding: 9px 14px; display: flex; align-items: center; justify-content: space-between; gap: 10px;
-    box-shadow: inset 0 1px 0 #fff, 0 3px 8px rgba(0,0,0,.6);
-  }
-  .brand { display: flex; flex-direction: column; line-height: 1.1; }
-  .brand b { font-family: Georgia, serif; font-style: italic; font-size: 1.15rem; letter-spacing: .5px; }
-  .brand small { font-size: .68rem; letter-spacing: 1.4px; color: #4a463f; }
-  .counter-win {
-    background: #0b0a09; border-radius: 6px; padding: 3px 12px 4px; text-align: center; min-width: 78px;
-    box-shadow: inset 0 2px 5px #000, 0 1px 0 #fff;
-  }
-  .counter-win span { display: block; font-family: "Courier New", monospace; font-weight: 700; font-size: 1.9rem; color: var(--brass); line-height: 1.05; letter-spacing: 3px; }
-  .counter-win small { font-size: .6rem; color: #b9a46b; letter-spacing: 1px; }
-  .lampbox { display: flex; flex-direction: column; align-items: center; gap: 3px; font-size: .6rem; letter-spacing: 1px; color: #4a463f; }
-  #lamp { width: 14px; height: 14px; border-radius: 50%; background: #4b1014; box-shadow: inset 0 1px 2px #000, 0 0 0 2px #8f9296; transition: background .15s, box-shadow .15s; }
-  #lamp.on { background: #ff3b3b; box-shadow: 0 0 10px 3px rgba(255,59,59,.8), 0 0 0 2px #8f9296; }
-
-  .finder {
-    flex: 1; min-height: 0; border-radius: 22px; padding: 8px; position: relative;
-    box-shadow: 0 4px 12px rgba(0,0,0,.65), inset 0 1px 0 #fff, inset 0 -2px 3px rgba(0,0,0,.35);
-  }
-  .finder::before, .finder::after { content: ""; position: absolute; width: 9px; height: 9px; border-radius: 50%; background: radial-gradient(circle at 35% 35%, #eee, #6f7378); top: 8px; z-index: 3; box-shadow: 0 1px 1px rgba(0,0,0,.5); }
-  .finder::before { left: 10px; } .finder::after { right: 10px; }
-  .glass { position: relative; height: 100%; border-radius: 15px; overflow: hidden; background: #000; box-shadow: inset 0 0 0 3px #000, inset 0 0 40px rgba(0,0,0,.55); }
-  video { width: 100%; height: 100%; object-fit: cover; display: block; filter: saturate(1.08) contrast(1.05) sepia(.12); }
+  /* ---------- Camera ---------- */
+  #camera { position: relative; background: #000; }
+  video { position: absolute; inset: 0; width: 100%; height: 100%; object-fit: cover; display: block; }
   video.mirror { transform: scaleX(-1); }
-  .glass::after { content: ""; position: absolute; inset: 0; pointer-events: none; background: radial-gradient(ellipse at center, transparent 55%, rgba(0,0,0,.45) 100%); }
-  .corner { position: absolute; width: 30px; height: 30px; border: 3px solid rgba(255,255,255,.8); pointer-events: none; z-index: 2; }
-  .corner.tl { top: 14px; left: 14px; border-right: 0; border-bottom: 0; }
-  .corner.tr { top: 14px; right: 14px; border-left: 0; border-bottom: 0; }
-  .corner.bl { bottom: 14px; left: 14px; border-right: 0; border-top: 0; }
-  .corner.br { bottom: 14px; right: 14px; border-left: 0; border-top: 0; }
-  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; z-index: 4; }
-  #flash.pop { animation: pop .22s ease-out; }
-  @keyframes pop { 0% { opacity: .9; } 100% { opacity: 0; } }
+  .scrim { position: absolute; left: 0; right: 0; pointer-events: none; }
+  .scrim.top { top: 0; height: 120px; background: linear-gradient(rgba(0,0,0,.45), transparent); }
+  .scrim.bottom { bottom: 0; height: 200px; background: linear-gradient(transparent, rgba(0,0,0,.55)); }
+  #flash { position: absolute; inset: 0; background: #fff; opacity: 0; pointer-events: none; }
+  #flash.pop { animation: pop .2s ease-out; }
+  @keyframes pop { 0% { opacity: .85; } 100% { opacity: 0; } }
 
-  .controls { display: flex; align-items: center; justify-content: space-between; padding: 2px 12px 0; }
-  .side { width: 64px; display: flex; flex-direction: column; align-items: center; gap: 4px; font-size: .62rem; letter-spacing: 1px; color: #b3aea4; }
-  .dial, .knob {
-    width: 52px; height: 52px; border-radius: 50%; position: relative;
-    background: repeating-conic-gradient(from 0deg, #d9dbdd 0 8deg, #8d9195 8deg 16deg);
-    box-shadow: 0 3px 6px rgba(0,0,0,.65), inset 0 0 0 3px #3b3d40, inset 0 0 0 6px #b9bcc0;
-  }
-  .dial { display: grid; place-items: center; color: #23201c; font-size: 1.3rem; font-weight: 700; }
-  .dial:active { transform: scale(.94); }
-  .knob { transition: transform .35s cubic-bezier(.3,1.4,.5,1); }
-  .knob::after { content: ""; position: absolute; left: 50%; top: 5px; width: 4px; height: 14px; margin-left: -2px; background: var(--cranberry); border-radius: 2px; }
-  #shutter {
-    width: 96px; height: 96px; border-radius: 50%; display: grid; place-items: center;
-    background: linear-gradient(180deg, var(--chrome-hi), var(--chrome-lo));
-    box-shadow: 0 5px 10px rgba(0,0,0,.7), inset 0 0 0 4px #54575a;
-  }
-  #shutter i { width: 68px; height: 68px; border-radius: 50%; background: radial-gradient(circle at 35% 30%, #ff6a76 0%, var(--cranberry) 45%, #7b1520 100%); box-shadow: inset 0 -4px 6px rgba(0,0,0,.4), 0 2px 3px rgba(0,0,0,.5); transition: transform .08s; }
-  #shutter:active i { transform: scale(.9); }
-  #shutter:disabled { opacity: .45; }
+  .hud-top { position: absolute; top: 16px; left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; color: #fff; }
+  .pill { display: flex; align-items: baseline; gap: 6px; padding: 8px 16px; border-radius: 999px; background: rgba(20,20,20,.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .pill b { font-size: 1.35rem; font-weight: 500; font-variant-numeric: tabular-nums; }
+  .pill span { font-size: .8rem; opacity: .8; }
+  .saving { display: none; align-items: center; gap: 8px; font-size: .8rem; padding: 8px 14px; border-radius: 999px; background: rgba(20,20,20,.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); }
+  .saving.on { display: flex; }
+  .saving i { width: 8px; height: 8px; border-radius: 50%; background: #fff; animation: blink 1s infinite; }
+  @keyframes blink { 50% { opacity: .25; } }
+
+  .hud-bottom { position: absolute; left: 0; right: 0; bottom: 22px; display: flex; align-items: center; justify-content: space-around; padding: 0 24px; color: #fff; }
+  .round { width: 48px; height: 48px; border-radius: 50%; display: grid; place-items: center; background: rgba(20,20,20,.35); -webkit-backdrop-filter: blur(12px); backdrop-filter: blur(12px); color: #fff; }
+  .round.ghost { visibility: hidden; }
+  #shutter { width: 78px; height: 78px; border-radius: 50%; border: 3px solid #fff; display: grid; place-items: center; }
+  #shutter i { width: 62px; height: 62px; border-radius: 50%; background: #fff; transition: transform .1s; }
+  #shutter:active i { transform: scale(.88); }
+  #shutter:disabled { opacity: .4; }
 
   /* ---------- Album ---------- */
-  #album { background: radial-gradient(120% 70% at 50% 0%, var(--pine) 0%, var(--pine-deep) 75%); }
-  .album-head { padding: 18px 18px 6px; text-align: center; }
-  .album-head h2 { font-family: Georgia, serif; font-style: italic; margin: 0 0 4px; font-size: 1.7rem; color: var(--brass); }
-  .album-head p { margin: 0; color: var(--muted); font-size: .88rem; }
-  .toolbar { display: flex; justify-content: center; padding: 8px 0 8px; }
-  #grid { flex: 1; overflow-y: auto; padding: 10px 14px 30px; display: grid; grid-template-columns: repeat(2, 1fr); gap: 16px 12px; align-content: start; }
-  .pol { background: var(--paper); padding: 7px 7px 24px; box-shadow: 0 6px 12px rgba(0,0,0,.5); transform: rotate(var(--r, 0deg)); border: 0; display: block; position: relative; }
-  .pol img { width: 100%; aspect-ratio: 1; object-fit: cover; display: block; background: #2b2b2b; }
-  .pol span { position: absolute; left: 0; right: 0; bottom: 4px; text-align: center; font-family: "Segoe Print", "Bradley Hand", "Comic Sans MS", cursive; font-size: .7rem; color: #4a4741; }
-  #empty { color: var(--muted); text-align: center; padding: 40px 20px; grid-column: 1 / -1; }
-  @media (min-width: 640px) { #grid { grid-template-columns: repeat(4, 1fr); } }
-  @media (min-width: 1000px) { #grid { grid-template-columns: repeat(6, 1fr); } }
+  #album { background: var(--bg); }
+  .album-head { display: flex; justify-content: space-between; align-items: flex-end; padding: 28px 20px 16px; }
+  .album-head h2 { margin: 0; font-size: 2rem; font-weight: 300; letter-spacing: -.02em; }
+  .album-head p { margin: 4px 0 0; font-size: .85rem; color: var(--sub); }
+  .round.dark { background: #ecece8; color: var(--ink); -webkit-backdrop-filter: none; backdrop-filter: none; width: 42px; height: 42px; }
+  #grid { flex: 1; overflow-y: auto; display: grid; grid-template-columns: repeat(3, 1fr); gap: 2px; align-content: start; padding-bottom: 24px; }
+  .ph { aspect-ratio: 1; background: #e9e9e5; display: block; overflow: hidden; }
+  .ph img { width: 100%; height: 100%; object-fit: cover; display: block; }
+  #empty { grid-column: 1 / -1; text-align: center; color: var(--sub); padding: 60px 20px; font-size: .95rem; }
+  @media (min-width: 640px) { #grid { grid-template-columns: repeat(5, 1fr); } }
+  @media (min-width: 1000px) { #grid { grid-template-columns: repeat(7, 1fr); } }
 
   /* ---------- Swipe viewer ---------- */
-  #viewer { position: fixed; inset: 0; background: rgba(0,0,0,.96); display: none; z-index: 10; touch-action: none; overflow: hidden; user-select: none; -webkit-user-select: none; }
+  #viewer { position: fixed; inset: 0; background: #000; display: none; z-index: 10; touch-action: none; overflow: hidden; user-select: none; -webkit-user-select: none; color: #fff; }
   #viewer.on { display: block; }
   #track { display: flex; width: 300%; height: 100%; transform: translate(-33.3333%, 0); will-change: transform; }
-  .slide { width: 33.3333%; flex: none; display: flex; align-items: center; justify-content: center; padding: 56px 10px 70px; }
-  .slide img { max-width: 100%; max-height: 100%; object-fit: contain; background: var(--paper); padding: 8px 8px 8px; box-shadow: 0 10px 30px rgba(0,0,0,.7); -webkit-user-drag: none; pointer-events: none; }
-  .vtop { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 10px); left: 12px; right: 12px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
-  #vcount { font-family: "Courier New", monospace; color: var(--brass); font-size: 1rem; background: rgba(0,0,0,.55); padding: 5px 12px; border-radius: 999px; }
-  .vbtn { background: rgba(255,255,255,.14); color: #fff; width: 44px; height: 44px; border-radius: 50%; font-size: 1.2rem; display: grid; place-items: center; text-decoration: none; }
+  .slide { width: 33.3333%; flex: none; display: flex; align-items: center; justify-content: center; padding: 64px 0 72px; }
+  .slide img { max-width: 100%; max-height: 100%; object-fit: contain; -webkit-user-drag: none; pointer-events: none; }
+  .vtop { position: absolute; top: calc(env(safe-area-inset-top, 0px) + 12px); left: 16px; right: 16px; display: flex; justify-content: space-between; align-items: center; z-index: 2; }
+  #vcount { font-size: .85rem; letter-spacing: .08em; font-variant-numeric: tabular-nums; opacity: .85; }
+  .vbtn { width: 44px; height: 44px; border-radius: 50%; display: grid; place-items: center; color: #fff; background: rgba(255,255,255,.1); }
   .vnav { position: absolute; top: 50%; transform: translateY(-50%); z-index: 2; }
-  #prev { left: 8px; } #next { right: 8px; }
-  .vnav:disabled { opacity: .2; }
-  .vbottom { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 16px); left: 0; right: 0; text-align: center; z-index: 2; color: #b9b9b2; font-size: .8rem; }
-  .vbottom a { color: var(--brass); }
+  #prev { left: 12px; } #next { right: 12px; }
+  .vnav:disabled { opacity: .15; }
+  .vbottom { position: absolute; bottom: calc(env(safe-area-inset-bottom, 0px) + 18px); left: 0; right: 0; text-align: center; z-index: 2; font-size: .8rem; }
+  .vbottom a { color: #fff; opacity: .7; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.4); padding-bottom: 1px; }
   @media (max-width: 600px) { .vnav { display: none; } }
 
-  #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 130px); transform: translateX(-50%); background: #f1f1ee; color: #1a1613; padding: 10px 18px; border-radius: 10px; font-size: .9rem; display: none; z-index: 20; max-width: 90%; text-align: center; }
+  #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 130px); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: .88rem; display: none; z-index: 20; max-width: 90%; text-align: center; }
   #toast.on { display: block; }
 
-  @media (prefers-reduced-motion: reduce) { #flash.pop { animation: none; } .knob { transition: none; } }
+  @media (prefers-reduced-motion: reduce) { #flash.pop, .saving i { animation: none; } }
 </style>
 </head>
 <body>
 
 <!-- Loading / message -->
-<section id="msg" class="screen leather active">
+<section id="msg" class="screen center active">
   <h1 id="msgTitle">Loading…</h1>
-  <p class="rules" id="msgText"></p>
+  <p class="lede" id="msgText"></p>
   <button class="btn" id="msgBtn" style="display:none"></button>
 </section>
 
 <!-- Intro -->
-<section id="intro" class="screen leather">
-  <p class="company" id="companyName"></p>
+<section id="intro" class="screen center">
+  <p class="eyebrow" id="companyName"></p>
   <h1>Christmas Party Camera</h1>
-  <div class="filmbox"><small>Christmas film</small><b id="introCount">20</b><span>exposures</span></div>
-  <p class="rules">That is all the film you get, so make each shot count. When the roll is finished you can flip through everyone's photos in the party album.</p>
-  <button class="btn" id="startBtn">Load film</button>
+  <div class="hero"><b id="introCount">20</b><span>photos</span></div>
+  <p class="lede">One roll, no retakes. When your photos are used up, you can browse everyone's shots in the shared album.</p>
+  <button class="btn" id="startBtn">Start</button>
 </section>
 
 <!-- Camera -->
-<section id="camera" class="screen leather">
-  <div class="plate chrome">
-    <div class="brand"><b>Xmas Instant</b><small>PARTY EDITION</small></div>
-    <div class="counter-win"><span id="left">20</span><small>SHOTS LEFT</small></div>
-    <div class="lampbox"><div id="lamp"></div>SAVING</div>
+<section id="camera" class="screen">
+  <video id="video" autoplay playsinline muted></video>
+  <div class="scrim top"></div>
+  <div class="scrim bottom"></div>
+  <div id="flash"></div>
+  <div class="hud-top">
+    <div class="pill"><b id="left">20</b><span>left</span></div>
+    <div class="saving" id="saving"><i></i>Saving</div>
   </div>
-  <div class="finder chrome">
-    <div class="glass">
-      <video id="video" autoplay playsinline muted></video>
-      <div class="corner tl"></div><div class="corner tr"></div>
-      <div class="corner bl"></div><div class="corner br"></div>
-      <div id="flash"></div>
-    </div>
-  </div>
-  <div class="controls">
-    <div class="side"><button class="dial" id="flip" aria-label="Switch camera">&#8635;</button>FLIP</div>
+  <div class="hud-bottom">
+    <button class="round" id="flip" aria-label="Switch camera">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v3.5h3.5"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-3.5h-3.5"/></svg>
+    </button>
     <button id="shutter" aria-label="Take photo"><i></i></button>
-    <div class="side"><div class="knob" id="knob"></div>ADVANCE</div>
+    <span class="round ghost"></span>
   </div>
 </section>
 
 <!-- Album -->
 <section id="album" class="screen">
   <div class="album-head">
-    <h2>The party album</h2>
-    <p>Tap a photo, then swipe left or right to browse</p>
+    <div><h2>Album</h2><p id="albumCount">Shared by all guests</p></div>
+    <button class="round dark" id="refresh" aria-label="Refresh album">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M20 11a8 8 0 0 0-14.9-3M4 5v3.5h3.5"/><path d="M4 13a8 8 0 0 0 14.9 3M20 19v-3.5h-3.5"/></svg>
+    </button>
   </div>
-  <div class="toolbar"><button class="btn ghost" id="refresh">Refresh album</button></div>
   <div id="grid"></div>
 </section>
 
@@ -209,15 +154,21 @@
 <div id="viewer" aria-modal="true" role="dialog">
   <div class="vtop">
     <span id="vcount"></span>
-    <button class="vbtn" id="closeV" aria-label="Close">&#10005;</button>
+    <button class="vbtn" id="closeV" aria-label="Close">
+      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"><path d="M6 6l12 12M18 6L6 18"/></svg>
+    </button>
   </div>
   <div id="track">
     <div class="slide"><img alt=""></div>
     <div class="slide"><img alt="Party photo"></div>
     <div class="slide"><img alt=""></div>
   </div>
-  <button class="vbtn vnav" id="prev" aria-label="Previous photo">&#8249;</button>
-  <button class="vbtn vnav" id="next" aria-label="Next photo">&#8250;</button>
+  <button class="vbtn vnav" id="prev" aria-label="Previous photo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+  <button class="vbtn vnav" id="next" aria-label="Next photo">
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg>
+  </button>
   <div class="vbottom"><a id="vsave" target="_blank" rel="noopener">Open original to save</a></div>
 </div>
 
@@ -311,14 +262,13 @@ function click() {
   try {
     audioCtx = audioCtx || new (window.AudioContext || window.webkitAudioContext)();
     const o = audioCtx.createOscillator(), g = audioCtx.createGain();
-    o.type = 'square'; o.frequency.value = 1100;
-    g.gain.setValueAtTime(.12, audioCtx.currentTime);
-    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .08);
+    o.type = 'sine'; o.frequency.value = 900;
+    g.gain.setValueAtTime(.1, audioCtx.currentTime);
+    g.gain.exponentialRampToValueAtTime(.001, audioCtx.currentTime + .07);
     o.connect(g); g.connect(audioCtx.destination);
-    o.start(); o.stop(audioCtx.currentTime + .09);
+    o.start(); o.stop(audioCtx.currentTime + .08);
   } catch (e) {}
 }
-let knobAngle = 0;
 function capture() {
   if (shotsLeft <= 0) return;
   const v = $('video');
@@ -335,7 +285,6 @@ function capture() {
   shotsLeft--;
   click();
   const f = $('flash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
-  knobAngle += 120; $('knob').style.transform = 'rotate(' + knobAngle + 'deg)';
   if (navigator.vibrate) navigator.vibrate(30);
 
   queue.push({ data, tries: 0 });
@@ -383,17 +332,16 @@ function updateCounter() {
 }
 function updateUI() {
   updateCounter();
-  $('lamp').classList.toggle('on', queue.length > 0);
+  $('saving').classList.toggle('on', queue.length > 0);
   $('shutter').disabled = shotsLeft <= 0;
   if (shotsLeft <= 0 && queue.length === 0 && $('camera').classList.contains('active')) {
     if (stream) stream.getTracks().forEach(t => t.stop());
-    toast('Film finished! Here is the album.');
+    toast('Roll finished. Here is the album.');
     openAlbum();
   }
 }
 
 // ---------- Album ----------
-const TILT = [-2.5, 1.8, -1, 2.4, -1.8, 1.2, -2.2, 0.8];
 function viewerOpen() { return $('viewer').classList.contains('on'); }
 
 async function loadAlbum() {
@@ -404,6 +352,7 @@ async function loadAlbum() {
     if (!d.ok) throw new Error('gallery');
     if (d.photos.join() === photos.join() && grid.children.length) return;
     photos = d.photos;
+    $('albumCount').textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
     if (!photos.length) {
       grid.innerHTML = '<div id="empty">No photos yet. Check back in a moment.</div>';
       return;
@@ -411,18 +360,16 @@ async function loadAlbum() {
     grid.innerHTML = '';
     photos.forEach((id, i) => {
       const b = document.createElement('button');
-      b.className = 'pol';
-      b.style.setProperty('--r', TILT[i % TILT.length] + 'deg');
+      b.className = 'ph';
       b.setAttribute('aria-label', 'Open photo ' + (i + 1));
       const img = document.createElement('img');
       img.loading = 'lazy'; img.alt = ''; img.src = thumb(id, 640);
-      const cap = document.createElement('span'); cap.textContent = 'Christmas 2026';
-      b.append(img, cap);
+      b.appendChild(img);
       b.onclick = () => openViewer(i);
       grid.appendChild(b);
     });
   } catch (e) {
-    if (!grid.children.length) grid.innerHTML = '<div id="empty">The album could not load. Tap Refresh album.</div>';
+    if (!grid.children.length) grid.innerHTML = '<div id="empty">The album could not load. Tap refresh to try again.</div>';
   }
 }
 function openAlbum() {
