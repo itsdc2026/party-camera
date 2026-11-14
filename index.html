@@ -96,10 +96,22 @@
   .vbottom a { color: #fff; opacity: .7; text-decoration: none; border-bottom: 1px solid rgba(255,255,255,.4); padding-bottom: 1px; }
   @media (max-width: 600px) { .vnav { display: none; } }
 
+  #hold { position: fixed; inset: 0; z-index: 15; display: flex; align-items: center; justify-content: center; padding: 32px; text-align: center; color: #fff;
+    background: rgba(10,10,10,.5); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); opacity: 0; pointer-events: none; transition: opacity .5s ease; }
+  #hold.on { opacity: 1; pointer-events: auto; }
+  .hold-card { max-width: 300px; display: flex; flex-direction: column; align-items: center; gap: 12px; }
+  .hold-card h3 { margin: 0; font-size: 1.3rem; font-weight: 500; }
+  .hold-card p { margin: 0; font-size: .92rem; line-height: 1.55; opacity: .8; }
+  .hold-card small { font-size: .82rem; opacity: .75; font-variant-numeric: tabular-nums; }
+  .spin { width: 34px; height: 34px; border-radius: 50%; border: 3px solid rgba(255,255,255,.25); border-top-color: #fff; animation: spin 1s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+  .bar { width: 200px; height: 3px; background: rgba(255,255,255,.25); border-radius: 2px; overflow: hidden; }
+  .bar i { display: block; height: 100%; width: 0; background: #fff; transition: width .4s ease; }
+
   #toast { position: fixed; left: 50%; bottom: calc(env(safe-area-inset-bottom, 0px) + 130px); transform: translateX(-50%); background: var(--ink); color: #fff; padding: 10px 18px; border-radius: 999px; font-size: .88rem; display: none; z-index: 20; max-width: 90%; text-align: center; }
   #toast.on { display: block; }
 
-  @media (prefers-reduced-motion: reduce) { #flash.pop, .saving i { animation: none; } }
+  @media (prefers-reduced-motion: reduce) { #flash.pop, .saving i, .spin { animation: none; } #hold { transition: none; } }
 </style>
 </head>
 <body>
@@ -109,15 +121,6 @@
   <h1 id="msgTitle">Loading…</h1>
   <p class="lede" id="msgText"></p>
   <button class="btn" id="msgBtn" style="display:none"></button>
-</section>
-
-<!-- Intro -->
-<section id="intro" class="screen center">
-  <p class="eyebrow" id="companyName"></p>
-  <h1>Christmas Party Camera</h1>
-  <div class="hero"><b id="introCount">20</b><span>photos</span></div>
-  <p class="lede">One roll, no retakes. When your photos are used up, you can browse everyone's shots in the shared album.</p>
-  <button class="btn" id="startBtn">Start</button>
 </section>
 
 <!-- Camera -->
@@ -172,22 +175,39 @@
   <div class="vbottom"><a id="vsave" target="_blank" rel="noopener">Open original to save</a></div>
 </div>
 
+<!-- Shown after the last shot while photos are still uploading -->
+<div id="hold" aria-live="polite">
+  <div class="hold-card">
+    <div class="spin"></div>
+    <h3>Still uploading your photos</h3>
+    <p>Please wait. Your album opens as soon as everything is saved.</p>
+    <div class="bar"><i id="holdBar"></i></div>
+    <small id="holdCount"></small>
+  </div>
+</div>
+
 <div id="toast"></div>
 <canvas id="canvas" style="display:none"></canvas>
 
 <script>
 // ====== SETTINGS ======
 const API_URL = 'https://script.google.com/macros/s/AKfycbxJysyR5dUuTcbQG658smvb4shERG8LIFGFOnUznwm1gzTJfOSUNaCcSKJmcJzZhs_ioA/exec';
-const COMPANY = 'SDC Global Choice Corp.';
+// Address of the party laptop (printed when you start server.js). Only works for guests on the party Wi-Fi.
+const LAPTOP_URL = 'https://192-168-1-50.local-ip.sh:8443';
 const MAX_SIDE = 2048;
 const JPEG_QUALITY = 0.85;
+const SLOW_MS = 9000;        // a direct upload slower than this counts as slow
+const SLOW_STRIKES = 2;      // this many slow uploads in a row moves a Wi-Fi guest to the laptop
+const STALL_MS = 20000;      // one upload stuck this long moves a Wi-Fi guest to the laptop at once
 // ======================
 
 const $ = id => document.getElementById(id);
 let guestId = '', shotsLeft = 0, maxShots = 20;
 let stream = null, facing = 'environment';
 let queue = [], uploading = false, albumTimer = null;
-let photos = [];
+let photos = [];   // album items: {t: thumbnail, f: full size, o: original}
+let relay = false, lan = false, lanCheckedAt = 0, laptopFull = false;
+let startUsed = 0, directDone = 0, slowStrikes = 0, lastDirectAt = 0, captured = 0, uploaded = 0;
 
 // ---------- Helpers ----------
 function show(id) {
@@ -220,7 +240,6 @@ const thumb = (id, w) => 'https://drive.google.com/thumbnail?id=' + id + '&sz=w'
 
 // ---------- Start ----------
 async function init() {
-  $('companyName').textContent = COMPANY;
   guestId = getGuestId();
   try {
     const d = await api({ action: 'status', guestId });
@@ -230,10 +249,42 @@ async function init() {
     showMsg('Cannot connect', 'Check your internet connection and try again.', 'Try again', () => location.reload());
     return;
   }
-  if (shotsLeft <= 0) { openAlbum(); return; }
-  $('introCount').textContent = shotsLeft;
+  startUsed = maxShots - shotsLeft;
   updateCounter();
-  show('intro');
+  if (shotsLeft <= 0) {
+    openAlbum();
+    laptopReachable(true).then(ok => { if (ok) loadAlbum(); });
+    return;
+  }
+  await startCamera();
+  laptopReachable(true);       // background check, never blocks the camera
+}
+
+// Is the party laptop reachable? True only for guests on the party Wi-Fi.
+async function laptopReachable(force) {
+  if (!force && Date.now() - lanCheckedAt < 15000) return lan;
+  lanCheckedAt = Date.now();
+  try {
+    const ctl = new AbortController(); const to = setTimeout(() => ctl.abort(), 1800);
+    const r = await fetch(LAPTOP_URL + '/api/ping', { signal: ctl.signal });
+    clearTimeout(to);
+    const d = await r.json();
+    lan = !!(d && d.relay);
+  } catch (e) { lan = false; }
+  return lan;
+}
+
+// Move this guest's remaining uploads to the laptop (only possible on the party Wi-Fi)
+async function switchToLaptop() {
+  if (relay) return true;
+  if (laptopFull || !(await laptopReachable(false))) return false;
+  try {
+    const r = await fetch(LAPTOP_URL + '/api/slot?guestId=' + guestId + '&used=' + (startUsed + directDone));
+    const d = await r.json();
+    if (d.ok && d.relay) { relay = true; slowStrikes = 0; return true; }
+    laptopFull = true;         // laptop is at its limit: stay on direct upload
+  } catch (e) {}
+  return false;
 }
 
 async function startCamera() {
@@ -269,6 +320,11 @@ function click() {
     o.start(); o.stop(audioCtx.currentTime + .08);
   } catch (e) {}
 }
+function photoName(exp) {
+  const d = new Date(), p = n => ('0' + n).slice(-2);
+  const stamp = String(d.getFullYear()).slice(2) + p(d.getMonth() + 1) + p(d.getDate()) + '-' + p(d.getHours()) + p(d.getMinutes()) + p(d.getSeconds());
+  return 'XMAS26_ROLL-' + guestId.slice(-6).toUpperCase() + '_EXP' + p(exp) + 'of' + p(maxShots) + '_' + stamp + '.JPG';
+}
 function capture() {
   if (shotsLeft <= 0) return;
   const v = $('video');
@@ -281,41 +337,67 @@ function capture() {
   ctx.imageSmoothingEnabled = true; ctx.imageSmoothingQuality = 'high';
   ctx.drawImage(v, 0, 0, c.width, c.height);
   const data = c.toDataURL('image/jpeg', JPEG_QUALITY);
+  const tc = document.createElement('canvas'), ts = 480 / Math.max(c.width, c.height);
+  tc.width = Math.round(c.width * ts); tc.height = Math.round(c.height * ts);
+  tc.getContext('2d').drawImage(c, 0, 0, tc.width, tc.height);
+  const thumbData = tc.toDataURL('image/jpeg', 0.7);
 
-  shotsLeft--;
+  shotsLeft--; captured++;
   click();
   const f = $('flash'); f.classList.remove('pop'); void f.offsetWidth; f.classList.add('pop');
   if (navigator.vibrate) navigator.vibrate(30);
 
-  queue.push({ data, tries: 0 });
+  // the name is made here so a photo that is retried through another route is never saved twice
+  queue.push({ name: photoName(maxShots - shotsLeft), data, thumb: thumbData, tries: 0 });
   updateUI();
   pump();
 }
 
 // ---------- Upload queue ----------
+// Starts with direct upload. On the party Wi-Fi, slow or stuck uploads move over to the laptop.
 async function pump() {
   if (uploading) return;
   uploading = true;
   while (queue.length) {
     const item = queue[0];
-    let result = null;
+    const viaLaptop = relay;
+    let result = null, stalled = false;
+    const t0 = Date.now();
+    const ctl = new AbortController();
+    const stallMs = (!viaLaptop && !laptopFull && lan) ? STALL_MS : 90000;
+    const timer = setTimeout(() => { stalled = true; ctl.abort(); }, stallMs);
     try {
-      const r = await fetch(API_URL, {
+      const r = await fetch(viaLaptop ? LAPTOP_URL + '/api/upload' : API_URL, {
         method: 'POST',
         headers: { 'Content-Type': 'text/plain;charset=utf-8' },
-        body: JSON.stringify({ guestId, image: item.data })
+        signal: ctl.signal,
+        body: JSON.stringify(viaLaptop
+          ? { guestId, name: item.name, image: item.data, thumb: item.thumb }
+          : { guestId, name: item.name, image: item.data })
       });
       result = await r.json();
     } catch (e) { result = null; }
+    clearTimeout(timer);
+    const took = Date.now() - t0;
 
     if (result && result.ok) {
-      queue.shift();
+      queue.shift(); uploaded++;
+      if (!viaLaptop) {
+        directDone++; lastDirectAt = Date.now();
+        slowStrikes = took > SLOW_MS ? slowStrikes + 1 : 0;
+        if (slowStrikes >= SLOW_STRIKES) await switchToLaptop();
+      }
     } else if (result && result.error === 'limit') {
       queue.shift(); shotsLeft = 0;
+    } else if (viaLaptop) {
+      relay = false; laptopFull = true;      // laptop unreachable or full: send the rest straight to Google
+      continue;
+    } else if (stalled && await switchToLaptop()) {
+      continue;                              // retry this same photo through the laptop
     } else {
       item.tries++;
       if (item.tries >= 4) {
-        queue.shift(); shotsLeft++;
+        queue.shift(); shotsLeft++; captured--;
         toast('One photo could not be saved. Your shot was returned.');
       } else {
         await sleep(1500 * item.tries);
@@ -334,36 +416,54 @@ function updateUI() {
   updateCounter();
   $('saving').classList.toggle('on', queue.length > 0);
   $('shutter').disabled = shotsLeft <= 0;
-  if (shotsLeft <= 0 && queue.length === 0 && $('camera').classList.contains('active')) {
+  const holding = shotsLeft <= 0 && queue.length > 0;
+  $('hold').classList.toggle('on', holding);
+  if (holding) {
+    $('holdCount').textContent = uploaded + ' of ' + captured + ' uploaded';
+    $('holdBar').style.width = (captured ? Math.round(uploaded / captured * 100) : 0) + '%';
+  }
+  if (shotsLeft <= 0 && queue.length === 0 && !uploading && $('camera').classList.contains('active')) {
     if (stream) stream.getTracks().forEach(t => t.stop());
-    toast('Roll finished. Here is the album.');
-    openAlbum();
+    openAlbum();                 // everything is uploaded: open the album automatically
   }
 }
 
 // ---------- Album ----------
 function viewerOpen() { return $('viewer').classList.contains('on'); }
 
+const abs = u => (u.charAt(0) === '/' ? LAPTOP_URL + u : u);
+async function fetchGallery() {
+  // On the party Wi-Fi the laptop serves the album (fast). Right after a direct upload, use Google so the newest photos are there.
+  if (lan && Date.now() - lastDirectAt > 45000) {
+    try {
+      const d = await (await fetch(LAPTOP_URL + '/api/gallery')).json();
+      if (d.ok) return d.photos.map(p => ({ t: abs(p.t), f: abs(p.f), o: abs(p.o) }));
+    } catch (e) {}
+  }
+  const d = await api({ action: 'gallery' });
+  if (!d.ok) throw new Error('gallery');
+  return d.photos.map(id => ({ t: thumb(id, 640), f: thumb(id, 2000), o: 'https://drive.google.com/file/d/' + id + '/view' }));
+}
+
 async function loadAlbum() {
   if (viewerOpen()) return;                  // do not shuffle photos while someone is swiping
   const grid = $('grid');
   try {
-    const d = await api({ action: 'gallery' });
-    if (!d.ok) throw new Error('gallery');
-    if (d.photos.join() === photos.join() && grid.children.length) return;
-    photos = d.photos;
+    const list = await fetchGallery();
+    if (JSON.stringify(list) === JSON.stringify(photos) && grid.children.length) return;
+    photos = list;
     $('albumCount').textContent = photos.length + (photos.length === 1 ? ' photo' : ' photos');
     if (!photos.length) {
       grid.innerHTML = '<div id="empty">No photos yet. Check back in a moment.</div>';
       return;
     }
     grid.innerHTML = '';
-    photos.forEach((id, i) => {
+    photos.forEach((p, i) => {
       const b = document.createElement('button');
       b.className = 'ph';
       b.setAttribute('aria-label', 'Open photo ' + (i + 1));
       const img = document.createElement('img');
-      img.loading = 'lazy'; img.alt = ''; img.src = thumb(id, 640);
+      img.loading = 'lazy'; img.alt = ''; img.src = p.t;
       b.appendChild(img);
       b.onclick = () => openViewer(i);
       grid.appendChild(b);
@@ -390,9 +490,9 @@ function setPos(x, y, anim) {
 function paint() {
   const imgs = track.querySelectorAll('img');
   [vi - 1, vi, vi + 1].forEach((i, k) => {
-    const im = imgs[k], id = photos[i];
-    if (id) {
-      const s = thumb(id, 2000);
+    const im = imgs[k], p = photos[i];
+    if (p) {
+      const s = p.f;
       if (im.getAttribute('src') !== s) im.src = s;
       im.style.visibility = 'visible';
     } else {
@@ -400,7 +500,7 @@ function paint() {
     }
   });
   $('vcount').textContent = (vi + 1) + ' / ' + photos.length;
-  $('vsave').href = 'https://drive.google.com/file/d/' + photos[vi] + '/view';
+  $('vsave').href = photos[vi].o;
   $('prev').disabled = vi <= 0;
   $('next').disabled = vi >= photos.length - 1;
 }
@@ -462,7 +562,6 @@ document.addEventListener('keydown', e => {
 });
 
 // ---------- Events ----------
-$('startBtn').onclick = startCamera;
 $('shutter').onclick = capture;
 $('flip').onclick = () => { facing = facing === 'environment' ? 'user' : 'environment'; startCamera(); };
 $('refresh').onclick = loadAlbum;
